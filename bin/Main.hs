@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Lib
+import qualified Cinema21 as C21
 
 main :: IO ()
-main = getC21
+main = C21.fetch
