@@ -11,9 +11,10 @@ copyright: dan pittman
 category: Web
 
 library
-    exposed-modules: Cinema21
+    exposed-modules:
+        Cinema21,
+        Types
     other-modules:
-        Types,
         Parser
     build-depends:
         base ^>=4.16.4.0,
@@ -26,6 +27,7 @@ executable verite
     main-is: Main.hs
     build-depends:
         base ^>=4.16.4.0,
+        time,
         verite
     hs-source-dirs: bin
     default-language: Haskell2010

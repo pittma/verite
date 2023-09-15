@@ -5,17 +5,47 @@ import Control.Monad.IO.Class
 import Network.HTTP.Req
 import qualified Data.ByteString.Char8 as B
 
-import Types (Film)
+import Types
 import Parser
 
-parse :: String -> Maybe [Film]
-parse s = Nothing
+time :: Parser String
+time = do
+  one '{'
+  toNext "'time': '"
+  time <- takeUntil "'"
+  toNext "}"
+  phrase ",\n" nop
+  many ' '
+  return time
 
-fetch :: IO ()
-fetch =
+times :: Parser [String]
+times = do
+  toNext "'times': [\n"
+  many ' '
+  ts <- repeatUntil time
+  phrase "]\n" nop
+  return ts
+
+film :: Parser Film
+film = do
+  one '{'
+  toNext "'title': '"
+  title <- takeUntil "'"
+  ts <- times
+  many ' '
+  phrase "},\n" nop
+  many ' '
+  return (Film title ts)
+
+parse :: Date -> String -> Maybe [Film]
+parse today s = fmap fst $ runParser s $ do
+  toNext ("'" ++ show today ++ "': [\n")
+  toNext "*/\n"
+  many ' '
+  repeatUntil film
+
+fetch :: Date -> IO (Maybe [Film])
+fetch today =
   runReq defaultHttpConfig $ do
     bs <- req GET (https "cinema21.com") NoReqBody bsResponse mempty
-    liftIO
-      $ case parse $ B.unpack (responseBody bs) of
-          Just films -> print films
-          Nothing -> print "didn't work"
+    return (parse today $ B.unpack (responseBody bs))
