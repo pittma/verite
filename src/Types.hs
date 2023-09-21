@@ -7,11 +7,14 @@ data Film = Film
 
 data Date = Date Integer Int Int
 
-instance Show Date where
-  show (Date year month day) =
-    show year ++ "-" ++ leadZero month ++ "-" ++ leadZero day
+dateStr :: Date -> String -> String
+dateStr (Date year month day) c = 
+    show year ++ c ++ leadZero month ++ c ++ leadZero day
     where
       leadZero i =
         if i < 10
           then "0" ++ show i
           else show i
+
+instance Show Date where
+  show d = dateStr d "-"

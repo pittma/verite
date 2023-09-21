@@ -1,6 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 module Parser where
 
+import Control.Monad (void)
 import Data.List (isPrefixOf)
 
 newtype Parser a = Parser
@@ -48,6 +49,9 @@ phrase match p = Parser $ \s ->
   then runParser (drop (length match) s) p
   else Nothing
 
+phrase_ :: String -> Parser ()
+phrase_ match = phrase match nop
+
 eatTo :: Parser a -> Parser a
 eatTo p =
   Parser $ \case
@@ -57,14 +61,33 @@ eatTo p =
         x -> x
     _ -> Nothing
 
+
+upto :: Char ->  Parser ()
+upto c = Parser $ \case
+  ss@(s:rest) -> if s == c
+    then Just ((), ss)
+    else runParser rest (upto c)
+  _ -> Nothing
+
+til :: Char -> Parser String
+til c = Parser $ \case
+  (s:rest) -> if s == c
+    then Just ([s], rest)
+    else runParser rest (til c)
+  _ -> Nothing
+
 toNext :: String -> Parser ()
 toNext  s = eatTo (phrase s nop)
 
 one :: Char -> Parser Char
-one c = Parser $ \(s:rest) ->
-  if s == c
-  then Just (s, rest)
-  else Nothing
+one c = Parser $ \case
+  (s:rest) -> if s == c
+    then Just (s, rest)
+    else Nothing
+  _ -> Nothing
+
+one_ :: Char -> Parser ()
+one_ c = void (one c)
 
 many :: Char -> Parser String
 many c = Parser $ \s ->
@@ -76,6 +99,15 @@ many c = Parser $ \s ->
       if s == c
         then s : go c rest
         else []
+
+(<|>) :: Parser a -> Parser a -> Parser a
+(<|>) p q = Parser $ \s ->
+  case runParser s p of
+    Just (r, rest) -> Just (r, rest)
+    Nothing -> runParser s q
+
+optional :: Parser () -> Parser ()
+optional p = p <|> nop
 
 lookAhead :: Parser a -> Parser a
 lookAhead p =

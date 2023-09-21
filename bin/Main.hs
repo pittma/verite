@@ -5,6 +5,7 @@ import Data.Time.Clock
 import Data.Time.Calendar
 import Types
 import qualified Cinema21 as C21
+import qualified Laurelhurst as L
 
 date :: IO Date
 date = do
@@ -31,3 +32,4 @@ main :: IO ()
 main = do
   today <- date
   runFetcher "Cinema 21" today C21.fetch
+  runFetcher "Laurelhurst Theater" today L.fetch
