@@ -9,7 +9,6 @@ import Data.Text
 pattern a :< as <- (uncons -> Just (a, as))
 pattern TEmpty <- (uncons -> Nothing)
 
-
 newtype Parser a = Parser
   { parser :: Text -> Maybe (a, Text)
   }
@@ -64,12 +63,10 @@ eatTo p =
         x -> x
     _ -> Nothing
 
-
 upto :: Char ->  Parser ()
 upto c = Parser $ \case
-  ss@(s :< rest) -> if s == c
-    then Just ((), ss)
-    else runParser rest (upto c)
+  ss@(s :< rest) | s == c -> Just ((), ss)
+  ss@(s :< rest) | otherwise -> runParser rest (upto c)
   _ -> Nothing
 
 toNext :: Text -> Parser ()
@@ -77,9 +74,8 @@ toNext  s = eatTo (phrase s nop)
 
 one :: Char -> Parser Char
 one c = Parser $ \case
-  (s :< rest) -> if s == c
-    then Just (s, rest)
-    else Nothing
+  (s :< rest) | s == c -> Just (s, rest)
+  (s :< rest) | otherwise -> Nothing
   _ -> Nothing
 
 one_ :: Char -> Parser ()
@@ -91,9 +87,10 @@ many c = Parser $ \s ->
   in Just (res, drop (length res) s)
   where
     go :: Char -> Text -> Text
+    go _ TEmpty = empty
     go c (s :< rest) =
       if s == c
-        then cons s  (go c rest)
+        then cons s (go c rest)
         else empty
 
 (<|>) :: Parser a -> Parser a -> Parser a
@@ -124,9 +121,9 @@ takeUntil str =
       result -> Just result
   where
     go :: Text -> Text -> (Text, Text)
-    go s (ss :< str2) =
-      if s `isPrefixOf` str2
-        then (singleton ss, str2)
-        else let (result, rest) = go s str2
-              in (cons ss result, rest)
+    go s (ss :< str2)
+      | s `isPrefixOf` str2 = (singleton ss, str2)
+      | otherwise =
+        let (result, rest) = go s str2
+         in (cons ss result, rest)
     go _ TEmpty = (empty, empty)

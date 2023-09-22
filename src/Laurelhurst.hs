@@ -13,7 +13,7 @@ time = do
   time <- takeUntil "\""
   upto '}'
   optional (phrase_ "},")
-  return time
+  pure time
 
 times :: Date -> Parser [Text]
 times d = do
@@ -21,7 +21,7 @@ times d = do
   phrase_ ("\"" <> pack (dateStr d "") <> "\":[")
   ts <- repeatUntil time
   toNext "}]}"
-  return ts
+  pure ts
 
 film :: Date -> Parser Film
 film d = do
@@ -34,9 +34,9 @@ film d = do
   ts <- times d
   one_ '}'
   one_ ','
-  return (Film title ts)
+  pure (Film title ts)
   
-parse ::  Date -> Text -> Maybe [Film]
-parse d s = fmap fst $ runParser s $ do
+parse ::  Date -> Parser [Film]
+parse d = do
   toNext "var gbl_movies = {"
   repeatUntil (film d)

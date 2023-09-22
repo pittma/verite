@@ -1,9 +1,10 @@
 module Types where
 
 import Data.Text
+import Parser (Parser)
 
 data TheaterParser = TP
-  { tp_parser :: Date -> Text -> Maybe [Film]
+  { tp_parser :: Date -> Parser [Film]
   , tp_name :: String
   , tp_hostname :: String
   }

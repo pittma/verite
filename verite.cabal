@@ -14,9 +14,10 @@ library
     exposed-modules:
         Cinema21,
         Laurelhurst,
+        LivingRoom,
+        Parser,
         Types
-    other-modules:
-        Parser
+--  other-modules:
     build-depends:
         base ^>=4.16.4.0,
         text

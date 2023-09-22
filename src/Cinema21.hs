@@ -14,7 +14,7 @@ time = do
   toNext "}"
   phrase ",\n" nop
   many ' '
-  return time
+  pure time
 
 times :: Parser [Text]
 times = do
@@ -22,7 +22,7 @@ times = do
   many ' '
   ts <- repeatUntil time
   phrase "]\n" nop
-  return ts
+  pure ts
 
 film :: Parser Film
 film = do
@@ -33,10 +33,10 @@ film = do
   many ' '
   phrase "},\n" nop
   many ' '
-  return (Film title ts)
+  pure (Film title ts)
 
-parse :: Date -> Text -> Maybe [Film]
-parse today s = fmap fst $ runParser s $ do
+parse :: Date -> Parser [Film]
+parse today = do
   toNext ("'" <> pack (show today) <> "': [\n")
   toNext "*/\n"
   many ' '
