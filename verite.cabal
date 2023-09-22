@@ -19,8 +19,7 @@ library
         Parser
     build-depends:
         base ^>=4.16.4.0,
-        bytestring,
-        req
+        text
     hs-source-dirs: src
     default-language: Haskell2010
 
@@ -28,6 +27,8 @@ executable verite
     main-is: Main.hs
     build-depends:
         base ^>=4.16.4.0,
+        req,
+        text,
         time,
         verite
     hs-source-dirs: bin

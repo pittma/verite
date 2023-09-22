@@ -1,14 +1,20 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, ViewPatterns, PatternSynonyms #-}
 module Parser where
 
+import Prelude hiding (drop, length)
+
 import Control.Monad (void)
-import Data.List (isPrefixOf)
+import Data.Text
+
+pattern a :< as <- (uncons -> Just (a, as))
+pattern TEmpty <- (uncons -> Nothing)
+
 
 newtype Parser a = Parser
-  { parser :: String -> Maybe (a, String)
+  { parser :: Text -> Maybe (a, Text)
   }
 
-runParser :: String -> Parser a -> Maybe (a, String)
+runParser :: Text -> Parser a -> Maybe (a, Text)
 runParser s p = parser p s
 
 instance Functor Parser where
@@ -40,22 +46,19 @@ instance Monad Parser where
 nop :: Parser ()
 nop = Parser $ \s -> Just ((), s)
 
-quit :: Parser a
-quit = Parser (const Nothing)
-
-phrase :: String -> Parser a -> Parser a
+phrase :: Text -> Parser a -> Parser a
 phrase match p = Parser $ \s ->
   if match `isPrefixOf` s
   then runParser (drop (length match) s) p
   else Nothing
 
-phrase_ :: String -> Parser ()
+phrase_ :: Text -> Parser ()
 phrase_ match = phrase match nop
 
 eatTo :: Parser a -> Parser a
 eatTo p =
   Parser $ \case
-    ss@(_:rest) ->
+    ss@(_ :< rest) ->
       case parser p ss of
         Nothing -> parser (eatTo p) rest
         x -> x
@@ -64,24 +67,17 @@ eatTo p =
 
 upto :: Char ->  Parser ()
 upto c = Parser $ \case
-  ss@(s:rest) -> if s == c
+  ss@(s :< rest) -> if s == c
     then Just ((), ss)
     else runParser rest (upto c)
   _ -> Nothing
 
-til :: Char -> Parser String
-til c = Parser $ \case
-  (s:rest) -> if s == c
-    then Just ([s], rest)
-    else runParser rest (til c)
-  _ -> Nothing
-
-toNext :: String -> Parser ()
+toNext :: Text -> Parser ()
 toNext  s = eatTo (phrase s nop)
 
 one :: Char -> Parser Char
 one c = Parser $ \case
-  (s:rest) -> if s == c
+  (s :< rest) -> if s == c
     then Just (s, rest)
     else Nothing
   _ -> Nothing
@@ -89,16 +85,16 @@ one c = Parser $ \case
 one_ :: Char -> Parser ()
 one_ c = void (one c)
 
-many :: Char -> Parser String
+many :: Char -> Parser Text
 many c = Parser $ \s ->
   let res = go c s
   in Just (res, drop (length res) s)
   where
-    go :: Char -> String -> String
-    go c (s:rest) =
+    go :: Char -> Text -> Text
+    go c (s :< rest) =
       if s == c
-        then s : go c rest
-        else []
+        then cons s  (go c rest)
+        else empty
 
 (<|>) :: Parser a -> Parser a -> Parser a
 (<|>) p q = Parser $ \s ->
@@ -109,23 +105,10 @@ many c = Parser $ \s ->
 optional :: Parser () -> Parser ()
 optional p = p <|> nop
 
-lookAhead :: Parser a -> Parser a
-lookAhead p =
-  Parser $ \s ->
-    case runParser s p of
-      Just (result, _) -> Just (result, s)
-      Nothing -> Nothing
-
-isnt :: Char -> Parser Char
-isnt c = Parser $ \(s:rest) ->
-  if c == s
-  then Nothing
-  else Just (s, rest)
-
 repeatUntil :: Parser a -> Parser [a]
 repeatUntil p = Parser $ \s -> Just $ go p s
   where
-    go :: Parser a -> String -> ([a], String)
+    go :: Parser a -> Text -> ([a], Text)
     go p s =
       case runParser s p of
         Just (res, rest) ->
@@ -133,17 +116,17 @@ repeatUntil p = Parser $ \s -> Just $ go p s
            in (res : r, rr)
         Nothing -> ([], s)
 
-takeUntil :: String -> Parser String
+takeUntil :: Text -> Parser Text
 takeUntil str =
   Parser $ \s ->
     case go str s of
-      ([], []) -> Nothing
+      (TEmpty, TEmpty) -> Nothing
       result -> Just result
   where
-    go :: String -> String -> (String, String)
-    go s (ss:str2) =
+    go :: Text -> Text -> (Text, Text)
+    go s (ss :< str2) =
       if s `isPrefixOf` str2
-        then ([ss], str2)
+        then (singleton ss, str2)
         else let (result, rest) = go s str2
-              in (ss : result, rest)
-    go _ [] = ([], [])
+              in (cons ss result, rest)
+    go _ TEmpty = (empty, empty)

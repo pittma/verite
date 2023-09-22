@@ -1,8 +1,16 @@
 module Types where
 
+import Data.Text
+
+data TheaterParser = TP
+  { tp_parser :: Date -> Text -> Maybe [Film]
+  , tp_name :: String
+  , tp_hostname :: String
+  }
+  
 data Film = Film
-  { f_title :: String
-  , f_showtimes :: [String]
+  { f_title :: Text
+  , f_showtimes :: [Text]
   } deriving (Show)
 
 data Date = Date Integer Int Int

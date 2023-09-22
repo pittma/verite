@@ -1,13 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Laurelhurst where
 
-import Network.HTTP.Req
-import qualified Data.ByteString.Char8 as B
-
+import Data.Text
+import Data.Text.Encoding (decodeLatin1)
 import Parser
 import Types
 
-time :: Parser String
+time :: Parser Text
 time = do
   one_ '{'
   toNext "\"timeStr\":\""
@@ -16,11 +15,10 @@ time = do
   optional (phrase_ "},")
   return time
 
-
-times :: Date -> Parser [String]
+times :: Date -> Parser [Text]
 times d = do
   one_ '{'
-  phrase_ ("\"" ++ dateStr d "" ++ "\":[")
+  phrase_ ("\"" <> pack (dateStr d "") <> "\":[")
   ts <- repeatUntil time
   toNext "}]}"
   return ts
@@ -38,13 +36,7 @@ film d = do
   one_ ','
   return (Film title ts)
   
-parse ::  Date -> String -> Maybe [Film]
+parse ::  Date -> Text -> Maybe [Film]
 parse d s = fmap fst $ runParser s $ do
   toNext "var gbl_movies = {"
   repeatUntil (film d)
-
-fetch :: Date -> IO (Maybe [Film])
-fetch today =
-  runReq defaultHttpConfig $ do
-    bs <- req GET (https "laurelhursttheater.com") NoReqBody bsResponse mempty
-    return (parse today $ B.unpack (responseBody bs))
