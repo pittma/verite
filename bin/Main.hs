@@ -6,7 +6,7 @@ import Data.Text.Encoding (decodeLatin1)
 import Data.Time.Clock
 import Data.Time.Calendar
 import Network.HTTP.Req
-import Parser (Parser, runParser)
+import Text.Parselet (Parser, runParser)
 import Types
 import qualified Cinema21 as C21
 import qualified Laurelhurst as L

@@ -15,11 +15,10 @@ library
         Cinema21,
         Laurelhurst,
         LivingRoom,
-        Parser,
         Types
---  other-modules:
     build-depends:
         base ^>=4.17.2.0,
+        parselet,
         text
     hs-source-dirs: src
     default-language: Haskell2010
@@ -28,6 +27,7 @@ executable verite
     main-is: Main.hs
     build-depends:
         base ^>=4.17.2.0,
+        parselet,
         req,
         text,
         time,

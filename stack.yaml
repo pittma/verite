@@ -1,0 +1,9 @@
+resolver: lts-21.21
+
+packages:
+- .
+
+extra-deps:
+- github: pittma/parselet
+  commit: 7b4776fd884fc479c871c737af3fd532b9b7921e
+

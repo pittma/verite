@@ -1,7 +1,7 @@
 module Types where
 
 import Data.Text
-import Parser (Parser)
+import Text.Parselet (Parser)
 
 data TheaterParser = TP
   { tp_parser :: Date -> Parser [Film]

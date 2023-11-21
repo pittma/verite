@@ -2,7 +2,7 @@
 module LivingRoom (parse) where
 
 import Data.Text
-import Parser
+import Text.Parselet
 import Types
 
 data Period = Am | Pm

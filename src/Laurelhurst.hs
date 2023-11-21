@@ -3,7 +3,7 @@ module Laurelhurst where
 
 import Data.Text
 import Data.Text.Encoding (decodeLatin1)
-import Parser
+import Text.Parselet
 import Types
 
 time :: Parser Text

@@ -1,10 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Cinema21 (parse) where
 
+import Prelude hiding (repeat)
+
 import Data.Text
 import Data.Text.Encoding (decodeLatin1)
 import Types
-import Parser
+import Text.Parselet
 
 time :: Parser Text
 time = do
@@ -12,16 +14,16 @@ time = do
   toNext "'time': '"
   time <- takeUntil "'"
   toNext "}"
-  phrase ",\n" nop
-  many ' '
+  phrase ",\n"
+  repeat ' '
   pure time
 
 times :: Parser [Text]
 times = do
   toNext "'times': [\n"
-  many ' '
+  repeat ' '
   ts <- repeatUntil time
-  phrase "]\n" nop
+  phrase "]\n"
   pure ts
 
 film :: Parser Film
@@ -30,14 +32,14 @@ film = do
   toNext "'title': '"
   title <- takeUntil "'"
   ts <- times
-  many ' '
-  phrase "},\n" nop
-  many ' '
+  repeat ' '
+  phrase "},\n"
+  repeat ' '
   pure (Film title ts)
 
 parse :: Date -> Parser [Film]
 parse today = do
   toNext ("'" <> pack (show today) <> "': [\n")
   toNext "*/\n"
-  many ' '
+  repeat ' '
   repeatUntil film
