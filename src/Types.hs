@@ -14,7 +14,8 @@ data Film = Film
   , f_showtimes :: [Text]
   } deriving (Show)
 
-data Date = Date Integer Int Int
+data Date =
+  Date Integer Int Int
 
 dateStr :: Date -> String -> String
 dateStr (Date year month day) c = 

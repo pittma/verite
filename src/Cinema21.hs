@@ -5,7 +5,7 @@ import Prelude hiding (repeat)
 
 import Data.Text
 import Data.Text.Encoding (decodeLatin1)
-import Types
+import Types (Date(..), Film(..))
 import Text.Parselet
 
 time :: Parser Text
@@ -15,13 +15,13 @@ time = do
   time <- takeUntil "'"
   toNext "}"
   phrase ",\n"
-  repeat ' '
+  whitespace
   pure time
 
 times :: Parser [Text]
 times = do
   toNext "'times': [\n"
-  repeat ' '
+  whitespace
   ts <- repeatUntil time
   phrase "]\n"
   pure ts
@@ -32,14 +32,14 @@ film = do
   toNext "'title': '"
   title <- takeUntil "'"
   ts <- times
-  repeat ' '
+  whitespace
   phrase "},\n"
-  repeat ' '
+  whitespace
   pure (Film title ts)
 
 parse :: Date -> Parser [Film]
 parse today = do
   toNext ("'" <> pack (show today) <> "': [\n")
   toNext "*/\n"
-  repeat ' '
+  whitespace
   repeatUntil film
